@@ -1,0 +1,6 @@
+---
+- name: Install NVIDIA DCGM Exporter
+  hosts: gpu_servers
+  become: true
+  roles:
+    - dcgm_exporter

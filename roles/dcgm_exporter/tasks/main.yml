@@ -1,0 +1,59 @@
+---
+- name: Check for installed nvidia-driver RPM
+  ansible.builtin.package_facts:
+    manager: rpm
+
+- name: Extract nvidia-driver version
+  ansible.builtin.set_fact:
+    _nvidia_driver_version_release: "{{ ansible_facts.packages['nvidia-driver'][0].version }}-{{ ansible_facts.packages['nvidia-driver'][0].release }}"
+  when: "'nvidia-driver' in ansible_facts.packages"
+
+- name: Set libnvidia-ml version based on nvidia-driver or fallback
+  ansible.builtin.set_fact:
+    _libnvidia_ml_version_release: "{{ _nvidia_driver_version_release | default(dcgm_exporter_libnvidia_ml_version_release_fallback) }}"
+
+- name: Install NVIDIA Management Library RPM
+  ansible.builtin.dnf:
+    name: >-
+      {{ dcgm_exporter_nvidia_repo_url -}}
+      libnvidia-ml-{{ _libnvidia_ml_version_release }}.x86_64.rpm
+    state: present
+  notify: Restart dcgm-exporter
+
+- name: Install NVIDIA Container Tools RPM
+  ansible.builtin.dnf:
+    name: >-
+      {{ dcgm_exporter_nvidia_repo_url -}}
+      nvidia-container-toolkit-{{ dcgm_exporter_libnvidia_container_toolkit_version_release }}.x86_64.rpm
+    state: present
+  notify: Restart dcgm-exporter
+
+- name: Check if CDI configfile exists
+  ansible.builtin.stat:
+    path: /etc/cdi/nvidia.yaml
+  register: _cdi_config_file_exists
+
+- name: Configure NVIDIA container runtime
+  when: not _cdi_config_file_exists.stat.exists
+  block:
+    - name: Configure NVIDIA container runtime
+      ansible.builtin.command: nvidia-ctk runtime configure --runtime=containerd
+      changed_when: true
+
+    - name: Generate NVIDIA CDI configuration
+      ansible.builtin.command: nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+      changed_when: true
+
+- name: Create dcgm-exporter systemd service
+  ansible.builtin.template:
+    src: dcgm-exporter.service.j2
+    dest: /etc/systemd/system/dcgm-exporter.service
+    mode: '0644'
+  notify: Restart dcgm-exporter
+
+- name: Enable and start dcgm-exporter service
+  ansible.builtin.systemd:
+    name: dcgm-exporter
+    enabled: true
+    state: started
+    daemon_reload: true

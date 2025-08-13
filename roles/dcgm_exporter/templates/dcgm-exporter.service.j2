@@ -1,0 +1,15 @@
+[Unit]
+Description=NVIDIA DCGM Exporter
+Documentation=https://github.com/NVIDIA/dcgm-exporter
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/podman run --replace --name dcgm-exporter --rm -d --device=nvidia.com/gpu=all -p 9400:9400 -e "DCGM_EXPORTER_DEBUG=true" --cap-add SYS_ADMIN nvcr.io/nvidia/k8s/dcgm-exporter:{{ dcgm_exporter_image_tag }}
+ExecStop=/usr/bin/podman stop dcgm-exporter
+Restart=always
+RestartSec=10
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target
