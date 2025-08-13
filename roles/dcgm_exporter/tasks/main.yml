@@ -31,10 +31,10 @@
 - name: Check if CDI configfile exists
   ansible.builtin.stat:
     path: /etc/cdi/nvidia.yaml
-  register: _cdi_config_file_exists
+  register: _cdi_config_file
 
 - name: Configure NVIDIA container runtime
-  when: not _cdi_config_file_exists.stat.exists
+  when: not _cdi_config_file.stat.exists
   block:
     - name: Configure NVIDIA container runtime
       ansible.builtin.command: nvidia-ctk runtime configure --runtime=containerd
@@ -57,3 +57,14 @@
     enabled: true
     state: started
     daemon_reload: true
+
+- name: Wait for dcgm-exporter service to be ready
+  ansible.builtin.wait_for:
+    port: 9400
+    timeout: 300
+
+- name: Validate DCGM metrics endpoint is working
+  ansible.builtin.shell: set -o pipefail && curl -s localhost:9400/metrics | grep 'DCGM_FI_DEV_SM_CLOCK{'
+  register: dcgm_metrics_check
+  failed_when: dcgm_metrics_check.rc != 0
+  changed_when: false
