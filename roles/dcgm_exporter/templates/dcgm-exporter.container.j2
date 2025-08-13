@@ -1,0 +1,17 @@
+[Unit]
+Description=NVIDIA DCGM Exporter
+Documentation=https://github.com/NVIDIA/dcgm-exporter
+After=network.target
+
+[Container]
+Image=nvcr.io/nvidia/k8s/dcgm-exporter:{{ dcgm_exporter_image_tag }}
+AddCapability=SYS_ADMIN
+AddDevice=nvidia.com/gpu=all
+PublishPort=0.0.0.0:9400:9400
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target default.target
