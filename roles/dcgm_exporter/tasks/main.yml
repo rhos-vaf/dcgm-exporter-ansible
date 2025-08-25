@@ -1,67 +1,17 @@
 ---
-- name: Check for installed nvidia-driver RPM
-  ansible.builtin.package_facts:
-    manager: rpm
+- name: Add nvidia CUDA repo
+  yum_repository:
+    name: nvidia-cuda-rhel9-x86_64
+    description: NVIDIA CUDA repo for RHEL 9
+    baseurl: https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64
+    gpgcheck: yes
+    gpgkey: https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/D42D0685.pub
 
-- name: Extract nvidia-driver version
-  ansible.builtin.set_fact:
-    _nvidia_driver_version_release: "{{ ansible_facts.packages['nvidia-driver'][0].version }}-{{ ansible_facts.packages['nvidia-driver'][0].release }}"
-  when: "'nvidia-driver' in ansible_facts.packages"
+- import_tasks: management-library.yml
 
-- name: Set libnvidia-ml version based on nvidia-driver or fallback
-  ansible.builtin.set_fact:
-    _libnvidia_ml_version_release: "{{ _nvidia_driver_version_release | default(dcgm_exporter_libnvidia_ml_version_release_fallback) }}"
+- import_tasks: container-tools.yml
 
-- name: Install NVIDIA Management Library RPM
-  ansible.builtin.dnf:
-    name: >-
-      {{ dcgm_exporter_nvidia_repo_url -}}
-      libnvidia-ml-{{ _libnvidia_ml_version_release }}.x86_64.rpm
-    state: present
-  notify: Restart dcgm-exporter
-
-- name: Install NVIDIA Container Tools RPM
-  ansible.builtin.dnf:
-    name: >-
-      {{ dcgm_exporter_nvidia_repo_url -}}
-      nvidia-container-toolkit-{{ dcgm_exporter_libnvidia_container_toolkit_version_release }}.x86_64.rpm
-    state: present
-  notify: Restart dcgm-exporter
-
-- name: Check if CDI configfile exists
-  ansible.builtin.stat:
-    path: /etc/cdi/nvidia.yaml
-  register: _cdi_config_file
-
-- name: Configure NVIDIA container runtime
-  when: not _cdi_config_file.stat.exists
-  block:
-    - name: Configure NVIDIA container runtime
-      ansible.builtin.command: nvidia-ctk runtime configure --runtime=containerd
-      changed_when: true
-
-    - name: Generate NVIDIA CDI configuration
-      ansible.builtin.command: nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
-      changed_when: true
-
-- name: Create dcgm-exporter systemd service using podman quadlet
-  ansible.builtin.template:
-    src: dcgm-exporter.container.j2
-    dest: /etc/containers/systemd/dcgm-exporter.container
-    mode: '0644'
-  notify: Restart dcgm-exporter
-
-- name: Enable and start dcgm-exporter service
-  ansible.builtin.systemd:
-    name: dcgm-exporter
-    enabled: true
-    state: started
-    daemon_reload: true
-
-- name: Wait for dcgm-exporter service to be ready
-  ansible.builtin.wait_for:
-    port: 9400
-    timeout: 300
+- import_tasks: systemd.yml
 
 - name: Validate DCGM metrics endpoint is working
   ansible.builtin.shell: set -o pipefail && curl -s localhost:9400/metrics | grep 'DCGM_FI_DEV_SM_CLOCK{'

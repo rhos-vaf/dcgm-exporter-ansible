@@ -1,0 +1,23 @@
+- name: Install NVIDIA Container Tools RPM
+  ansible.builtin.dnf:
+    name: >-
+      {{ dcgm_exporter_nvidia_repo_url -}}
+      nvidia-container-toolkit-{{ dcgm_exporter_libnvidia_container_toolkit_version_release }}.x86_64.rpm
+    state: present
+  notify: Restart dcgm-exporter
+
+- name: Check if CDI configfile exists
+  ansible.builtin.stat:
+    path: /etc/cdi/nvidia.yaml
+  register: _cdi_config_file
+
+- name: Configure NVIDIA container runtime
+  when: not _cdi_config_file.stat.exists
+  block:
+    - name: Configure NVIDIA container runtime
+      ansible.builtin.command: nvidia-ctk runtime configure --runtime=containerd
+      changed_when: true
+
+    - name: Generate NVIDIA CDI configuration
+      ansible.builtin.command: nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+      changed_when: true

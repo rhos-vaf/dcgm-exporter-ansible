@@ -14,6 +14,7 @@ This Ansible role installs and configures the NVIDIA DCGM Exporter for GPU monit
 | `dcgm_exporter_nvidia_repo_url` | `"https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/"` | Base URL for RPM downloads |
 | `dcgm_exporter_image_tag` | `"4.3.1-4.4.0-ubi9"` | Container image tag for the DCGM Exporter |
 | `dcgm_exporter_libnvidia_ml_version_release_fallback` | `"575.57.08-1.el9"` | Fallback version for NVIDIA Management Library RPM if nvidia-driver is not installed |
+| `dcgm_exporter_libnvidia_ml_version_release_force` | `"560.28.03-1.el9"` | (Optional) If set, forces installation of this specific libnvidia-ml RPM version, overriding auto-detection |
 | `dcgm_exporter_libnvidia_container_toolkit_version_release` | `"1.17.8-1"` | Version of the NVIDIA Container Tools RPM to install |
 
 ## Dependencies

@@ -7,6 +7,7 @@ dcgm_exporter_image_tag: "4.3.1-4.4.0-ubi9"
 
 # NVIDIA Management Library RPM version (fallback if nvidia-driver not found)
 dcgm_exporter_libnvidia_ml_version_release_fallback: "575.57.08-1.el9"
+dcgm_exporter_libnvidia_ml_version_release_force: "560.28.03-1.el9"
 
 # NVIDIA Container Tools RPM version
 dcgm_exporter_libnvidia_container_toolkit_version_release: "1.17.8-1"

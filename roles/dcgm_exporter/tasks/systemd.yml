@@ -1,0 +1,19 @@
+
+- name: Create dcgm-exporter systemd service using podman quadlet
+  ansible.builtin.template:
+    src: dcgm-exporter.container.j2
+    dest: /etc/containers/systemd/dcgm-exporter.container
+    mode: '0644'
+  notify: Restart dcgm-exporter
+
+- name: Enable and start dcgm-exporter service
+  ansible.builtin.systemd:
+    name: dcgm-exporter
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Wait for dcgm-exporter service to be ready
+  ansible.builtin.wait_for:
+    port: 9400
+    timeout: 300
