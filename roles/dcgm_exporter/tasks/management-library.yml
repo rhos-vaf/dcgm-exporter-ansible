@@ -2,12 +2,11 @@
 - name: Extract nvidia-driver version
   ansible.builtin.set_fact:
     _nvidia_driver_version_release: "{{ ansible_facts.packages['nvidia-driver'][0].version }}-{{ ansible_facts.packages['nvidia-driver'][0].release }}"
-  when: "'nvidia-driver' in ansible_facts.packages"
 
 - name: Set Management Library package name for older drivers
   ansible.builtin.set_fact:
     dcgm_exporter_nvidia_ml_package_name: "nvidia-driver-NVML"
-  when: "'nvidia-driver' in ansible_facts.packages and ansible_facts.packages['nvidia-driver'][0].version | int < 560"
+  when: _nvidia_driver_version_release | ansible.builtin.regex_replace('^(.*?)\\..*', '\\1') | int < 560
 
 - name: Install NVIDIA Management Library RPM
   ansible.builtin.dnf:

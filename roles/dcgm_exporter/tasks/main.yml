@@ -5,7 +5,7 @@
     description: NVIDIA CUDA repo for RHEL 9
     baseurl: "{{dcgm_exporter_nvidia_repo_url}}/$basearch/"
     gpgcheck: yes
-    gpgkey: "{{dcgm_exporter_nvidia_repo_url}}/D42D0685.pub"
+    gpgkey: "{{dcgm_exporter_nvidia_repo_url}}/$basearch/D42D0685.pub"
 
 - import_tasks: driver.yml
 

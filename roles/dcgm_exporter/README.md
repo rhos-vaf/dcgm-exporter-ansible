@@ -16,7 +16,7 @@ This Ansible role installs and configures the NVIDIA DCGM Exporter for GPU monit
 | `dcgm_exporter_image_tag` | `"4.3.1-4.4.0-ubi9"` | Container image tag for the DCGM Exporter |
 | `dcgm_exporter_libnvidia_container_toolkit_version_release` | `"1.17.8-1"` | Version of the NVIDIA Container Tools RPM to install |
 | `dcgm_exporter_nvidia_driver_force_install` | `false` | Force installation of nvidia-driver RPM, overriding auto-detection |
-| `dcgm_exporter_nvidia_driver_module_version` | `"575"` | NVIDIA Driver version to install if not already present |
+| `dcgm_exporter_nvidia_driver_module_version` | `"open-dkms"` | NVIDIA Driver version to install if not already present |
 
 ## Dependencies
 
