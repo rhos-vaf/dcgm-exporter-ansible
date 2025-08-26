@@ -1,27 +1,16 @@
 ---
-- name: Check for installed nvidia-driver RPM
-  ansible.builtin.package_facts:
-    manager: rpm
-
 - name: Extract nvidia-driver version
   ansible.builtin.set_fact:
     _nvidia_driver_version_release: "{{ ansible_facts.packages['nvidia-driver'][0].version }}-{{ ansible_facts.packages['nvidia-driver'][0].release }}"
   when: "'nvidia-driver' in ansible_facts.packages"
 
-- name: Set libnvidia-ml version based on nvidia-driver or fallback
+- name: Set Management Library package name for older drivers
   ansible.builtin.set_fact:
-    _libnvidia_ml_version_release: "{{ _nvidia_driver_version_release | default(dcgm_exporter_libnvidia_ml_version_release_fallback) }}"
-  when: dcgm_exporter_libnvidia_ml_version_release_force is not defined
-
-- name: Set libnvidia-ml version based on force variable
-  ansible.builtin.set_fact:
-    _libnvidia_ml_version_release: "{{ dcgm_exporter_libnvidia_ml_version_release_force }}"
-  when: dcgm_exporter_libnvidia_ml_version_release_force is defined
+    dcgm_exporter_nvidia_ml_package_name: "nvidia-driver-NVML"
+  when: "'nvidia-driver' in ansible_facts.packages and ansible_facts.packages['nvidia-driver'][0].version | int < 560"
 
 - name: Install NVIDIA Management Library RPM
   ansible.builtin.dnf:
-    name: >-
-      {{ dcgm_exporter_nvidia_repo_url -}}
-      libnvidia-ml-{{ _libnvidia_ml_version_release }}.x86_64.rpm
+    name: "{{ dcgm_exporter_nvidia_ml_package_name }}-{{ _nvidia_driver_version_release }}"
     state: present
   notify: Restart dcgm-exporter

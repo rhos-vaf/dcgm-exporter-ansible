@@ -1,8 +1,6 @@
 - name: Install NVIDIA Container Tools RPM
   ansible.builtin.dnf:
-    name: >-
-      {{ dcgm_exporter_nvidia_repo_url -}}
-      nvidia-container-toolkit-{{ dcgm_exporter_libnvidia_container_toolkit_version_release }}.x86_64.rpm
+    name: "nvidia-container-toolkit-{{ dcgm_exporter_libnvidia_container_toolkit_version_release }}"
     state: present
   notify: Restart dcgm-exporter
 

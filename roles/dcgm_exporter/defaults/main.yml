@@ -1,13 +1,18 @@
 ---
 # NVIDIA repository URL
-dcgm_exporter_nvidia_repo_url: "https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/"
+dcgm_exporter_nvidia_repo_url: "https://developer.download.nvidia.com/compute/cuda/repos/rhel9/"
 
 # NVIDIA DCGM Exporter container image tag
 dcgm_exporter_image_tag: "4.3.1-4.4.0-ubi9"
 
-# NVIDIA Management Library RPM version (fallback if nvidia-driver not found)
-dcgm_exporter_libnvidia_ml_version_release_fallback: "575.57.08-1.el9"
-dcgm_exporter_libnvidia_ml_version_release_force: "560.28.03-1.el9"
+# NVIDIA Driver version to install (if nvidia-driver not found)
+dcgm_exporter_nvidia_driver_module_version: "575"
+
+# Force installation of nvidia-driver RPM (overrides auto-detection)
+dcgm_exporter_nvidia_driver_force_install: false
+
+# NVIDIA Management Library package name to account for name change at 560
+dcgm_exporter_nvidia_ml_package_name: "libnvidia-ml"
 
 # NVIDIA Container Tools RPM version
 dcgm_exporter_libnvidia_container_toolkit_version_release: "1.17.8-1"
