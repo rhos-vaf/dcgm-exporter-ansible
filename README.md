@@ -1,57 +1,74 @@
 # NVIDIA DCGM Exporter Ansible Role
 
-This repository contains an Ansible role for installing and configuring the NVIDIA DCGM Exporter on systems with NVIDIA GPUs.
+This Ansible role installs and configures the NVIDIA DCGM Exporter for GPU monitoring and metrics collection.
 
-## Overview
+## Requirements
 
-The NVIDIA DCGM Exporter is a Prometheus exporter for GPU metrics that provides detailed monitoring capabilities for NVIDIA GPUs. This Ansible role automates the installation and configuration process.
-
-## Features
-
-- ✅ Installs NVIDIA Management Library RPM package
-- ✅ Installs NVIDIA Container Toolkit RPM package
-- ✅ Updates Container Device Interface (CDI) configuration
-- ✅ Creates and manages systemd service
-- ✅ Runs DCGM Exporter in a container using podman
-- ✅ Configurable container image tag and RPM version
-- ✅ Automatic service management (start, enable, restart)
-
-## Quick Start
-
-1. **Clone this repository:**
-
-   ```bash
-   git clone <repository-url>
-   cd dcgm-exporter-ansible
-   ```
-
-2. **Update the inventory file** (`inventory.yml`) with your GPU server details.
-
-3. **Run the playbook:**
-
-   ```bash
-   ansible-playbook -i inventory.yml playbook.yml
-   ```
-
-## Prerequisites
-
-- Ansible 2.18 or higher
+- Ansible 2.14 or higher
 - Target systems must have:
   - Podman installed
-  - NVIDIA drivers configured
   - Network access to pull container images
 
-## Verification
+## Role Variables
 
-After installation, you can verify the service is running:
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `dcgm_exporter_nvidia_repo_url` | `"https://developer.download.nvidia.com/compute/cuda/repos/rhel9"` | Base URL for NVIDIA repo |
+| `dcgm_exporter_image_tag` | `"4.3.1-4.4.0-ubi9"` | Container image tag for the DCGM Exporter |
+| `dcgm_exporter_libnvidia_container_toolkit_version_release` | `"1.17.8-1"` | Version of the NVIDIA Container Tools RPM to install |
+| `dcgm_exporter_nvidia_driver_module_version` | `"open-dkms"` | NVIDIA Driver version to install if not already present |
 
-```bash
-# Check service status
-systemctl status dcgm-exporter
+## Dependencies
 
-# Check if metrics are available
-curl http://localhost:9400/metrics
+None.
 
-# Check container status
-podman ps | grep dcgm-exporter
+## Example Playbook
+
+```yaml
+---
+- hosts: gpu_servers
+  roles:
+    - nvidia-dcgm-exporter
 ```
+
+With custom image tag:
+
+```yaml
+---
+- hosts: gpu_servers
+  vars:
+    dcgm_exporter_image_tag: "4.3.1-4.4.0-ubi9"
+  roles:
+    - nvidia-dcgm-exporter
+```
+
+## What This Role Does
+
+1. **Installs NVIDIA Driver**: Installs nvidia-driver from the NVIDIA repository if not already installed
+2. **Installs NVIDIA Management Library**: Installs the libnvidia-ml RPM that matches the installed nvidia-driver version
+2. **Installs NVIDIA Container Tools**: Installs the libnvidia-container-tools RPM for container GPU support
+3. **Updates CDI Configuration**: Adds the required mount configuration to `/etc/cdi/nvidia.yaml` for nvidia-ml library access
+4. **Creates Systemd Service**: Creates a systemd service file that manages the DCGM Exporter container
+5. **Manages Service**: Enables and starts the DCGM Exporter service
+
+## Container Configuration
+
+The role runs the DCGM Exporter in a container with the following configuration:
+
+- **Image**: `nvcr.io/nvidia/k8s/dcgm-exporter:{{ dcgm_exporter_image_tag }}`
+- **Port**: 9400 (Prometheus metrics endpoint)
+- **Devices**: All NVIDIA GPUs (`nvidia.com/gpu=all`)
+- **Capabilities**: SYS_ADMIN
+- **Environment**: DCGM_EXPORTER_DEBUG=true
+
+## Service Management
+
+The role creates a systemd service that:
+
+- Automatically starts on boot
+- Restarts on failure
+- Uses podman to manage the container lifecycle
+
+## Metrics Endpoint
+
+Once deployed, metrics will be available at `http://your-server:9400/metrics`

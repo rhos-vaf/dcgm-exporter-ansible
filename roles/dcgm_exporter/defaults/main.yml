@@ -8,9 +8,6 @@ dcgm_exporter_image_tag: "4.3.1-4.4.0-ubi9"
 # NVIDIA Driver version to install (if nvidia-driver not found)
 dcgm_exporter_nvidia_driver_module_version: "open-dkms"
 
-# Force installation of nvidia-driver RPM (overrides auto-detection)
-dcgm_exporter_nvidia_driver_force_install: false
-
 # NVIDIA Management Library package name to account for name change at 560
 dcgm_exporter_nvidia_ml_package_name: "libnvidia-ml"
 

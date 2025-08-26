@@ -5,7 +5,7 @@
 
 - name: Check if nvidia-driver installation is needed
   ansible.builtin.set_fact:
-    _install_nvidia_driver: "{{ dcgm_exporter_nvidia_driver_force_install or ('nvidia-driver' not in ansible_facts.packages) }}"
+    _install_nvidia_driver: "{{ 'nvidia-driver' not in ansible_facts.packages }}"
 
 - name: Install nvidia-driver RPM if needed
   when: _install_nvidia_driver
